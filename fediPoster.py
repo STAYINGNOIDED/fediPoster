@@ -4,8 +4,8 @@ import os, sys, json
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", metavar="status",     type=str, help="what you want to post", nargs=1)
 parser.add_argument("-c", metavar="subject",    type=str, help="subject field",         nargs=1)
-# Will add functionality for multiple attachments by Christmas 2035
-parser.add_argument("-a", metavar="attachment", type=str, help="path to attachment",    nargs=1)
+# Will add functionality for multiple attachments by August 2021
+parser.add_argument("-a", metavar="attachment(s)",        help="path(s) to attachment(s)",    nargs="+")
 parser.add_argument("-i", metavar="instance",   type=str, help="instance url without https:// prefix,, eg; <sleepy.cafe>", nargs=1)
 parser.add_argument("-u", metavar="un/pw",      type=str, help="username and password, format like <username:password>",   nargs=1, default="default")
 parser.add_argument("-t", metavar="token",      type=str, help="bearer token,, generate here: https://tinysubversions.com/notes/mastodon-bot/", nargs=1)
@@ -24,7 +24,10 @@ token      = d["t"][0]
 format     = "text/" + d["f"]
 visibility = d["v"]
 if d["a"]:
-	attach = os.path.join( sys.path[0], d["a"][0] )
+	print( d["a"] )
+	attach = []
+	for i in d["a"]:
+		attach.append( os.path.join( sys.path[0], i ) )
 
 # Posts using your user name and password.
 # Takes the text you want posted, the instance, visibility,
@@ -54,21 +57,25 @@ def doPostOAuth( txt, sub, inst, vis, form, tok ):
 
 	response = requests.post("https://" + inst + "/api/v1/statuses", headers=headers, data=data)
 	
-# Uploads an attachment to the server and returns 
-# its media ID.
+# Uploads an attachment or attachments to the server 
+# and returns media ID(s).	
 def getMediaIDOAuth( img, inst, tok ):
-	files   = {
-	"file": (img, open(img, 'rb')), }
-	headers = {
-	"Authorization":"Bearer " + tok }
+	ids = []
+	for i in img:
+		files   = {
+		"file": (i, open(i, 'rb')), }
+		headers = {
+		"Authorization":"Bearer " + tok }
 
-	response = requests.post("https://" + inst + "/api/v1/media", headers=headers, files=files)
-	content  = response.content
-	a        = json.loads(content)
-	return a["id"]
+		response = requests.post("https://" + inst + "/api/v1/media", headers=headers, files=files)
+		content  = response.content
+		a        = json.loads(content)
+		ids.append( a["id"] )
+	
+	return ids
 
 # Calls the getMediaIDOAuth script for you and 
-# uses it to post your image. 
+# uses it to post your attachment(s). 
 def doImageOAuth( txt, sub, img, inst, vis, form, tok ):
 	id = getMediaIDOAuth(img, inst, tok)
 	
