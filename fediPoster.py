@@ -24,7 +24,6 @@ token      = d["t"][0]
 format     = "text/" + d["f"]
 visibility = d["v"]
 if d["a"]:
-	print( d["a"] )
 	attach = []
 	for i in d["a"]:
 		attach.append( os.path.join( sys.path[0], i ) )
